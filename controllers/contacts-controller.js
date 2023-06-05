@@ -1,11 +1,17 @@
-const { Contact } = require("../models/contact");
+const { Contact } = require("../models");
 
 const { HttpError } = require("../helpers");
 
 const { ctrlWrapper } = require("../decorators/");
 
-const getAllMovies = async (req, res) => {
-  const results = await Contact.find();
+const getAllContacts = async (req, res) => {
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
+  const results = await Contact.find({ owner }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).populate("owner", "email");
   res.json(results);
 };
 
@@ -18,7 +24,8 @@ const getById = async (req, res) => {
 };
 
 const addContact = async (req, res) => {
-  const results = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const results = await Contact.create({ ...req.body, owner });
   res.status(201).json(results);
 };
 
@@ -55,7 +62,7 @@ const updateFavorite = async (req, res, next) => {
 };
 
 module.exports = {
-  getAllMovies: ctrlWrapper(getAllMovies),
+  getAllContacts: ctrlWrapper(getAllContacts),
   getById: ctrlWrapper(getById),
   addContact: ctrlWrapper(addContact),
   deleteContact: ctrlWrapper(deleteContact),
