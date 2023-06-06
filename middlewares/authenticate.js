@@ -4,10 +4,9 @@ const { User } = require("../models");
 const { SECRET_KEY } = process.env;
 
 const authenticate = async (req, res, next) => {
-  console.log("req.headers", req.headers);
   const { authorization = "" } = req.headers;
   const [bearer, token] = authorization.split(" ");
-  console.log("token", token);
+
   if (bearer !== "Bearer") {
     next(HttpError(401));
   }
