@@ -1,8 +1,12 @@
 const { Contact } = require("../models");
 
+const fs = require("fs/promises");
+const path = require("path");
+
 const { HttpError } = require("../helpers");
 
 const { ctrlWrapper } = require("../decorators/");
+const contactsPath = path.resolve("public", "avatar");
 
 const getAllContacts = async (req, res) => {
   const { _id: owner } = req.user;
@@ -24,8 +28,12 @@ const getById = async (req, res) => {
 };
 
 const addContact = async (req, res) => {
+  const { path: oldPath, filename } = req.file;
+  const newPath = path.join(contactsPath, filename);
+  await fs.rename(oldPath, newPath);
+  const avatar = path.join("public", "avatar", filename);
   const { _id: owner } = req.user;
-  const results = await Contact.create({ ...req.body, owner });
+  const results = await Contact.create({ ...req.body, avatar, owner });
   res.status(201).json(results);
 };
 
