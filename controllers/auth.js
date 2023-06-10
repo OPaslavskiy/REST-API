@@ -50,6 +50,26 @@ const verify = async (req, res) => {
   res.json({ message: "Verify success" });
 };
 
+const resendVerifyEmail = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw HttpError(404);
+  }
+
+  if (user.verify) {
+    throw HttpError(400, "Email already verify");
+  }
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="${PROJECT_URL}/api/auth/verify/${user.vereficationCode}">Click to verify</a>`,
+  };
+
+  await sendEmail(verifyEmail);
+  res.json({ message: "Verify email send" });
+};
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -116,6 +136,7 @@ const updateSubscription = async (req, res) => {
 module.exports = {
   register: ctrlWrapper(register),
   verify: ctrlWrapper(verify),
+  resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),

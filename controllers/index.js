@@ -14,6 +14,7 @@ const {
   getCurrent,
   logout,
   updateSubscription,
+  resendVerifyEmail,
 } = require("./auth");
 
 const contacts = {
@@ -32,6 +33,7 @@ const auth = {
   logout,
   updateSubscription,
   verify,
+  resendVerifyEmail,
 };
 
 module.exports = {
