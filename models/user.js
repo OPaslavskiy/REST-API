@@ -1,7 +1,7 @@
 const { Schema, model } = require("mongoose");
 const Joi = require("joi");
 
-const hendleMongooseError = require("../helpers/handleMongooseError");
+const { hendleMongooseError } = require("../helpers");
 
 const emailRegexp = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
 
@@ -25,6 +25,13 @@ const userSchema = new Schema(
     token: {
       type: String,
       default: "",
+    },
+    verify: {
+      type: Boolean,
+      default: false,
+    },
+    vereficationCode: {
+      type: String,
     },
   },
   { versionKey: false, timestamps: true }

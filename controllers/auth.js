@@ -1,9 +1,10 @@
 const { User } = require("../models");
-const { HttpError } = require("../helpers");
+const { HttpError, sendEmail } = require("../helpers");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { nanoid } = require("nanoid");
 
-const { SECRET_KEY } = process.env;
+const { SECRET_KEY, PROJECT_URL } = process.env;
 
 const { ctrlWrapper } = require("../decorators/");
 
@@ -15,21 +16,45 @@ const register = async (req, res) => {
   }
 
   const createHashPassword = await bcryptjs.hash(password, 10);
+  const vereficationCode = nanoid();
 
   const newUser = await User.create({
     ...req.body,
     password: createHashPassword,
+    vereficationCode,
   });
   res.status(201).json({
     email: newUser.email,
   });
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="${PROJECT_URL}/api/auth/verify/${vereficationCode}">Click to verify</a>`,
+  };
+
+  await sendEmail(verifyEmail);
+};
+
+const verify = async (req, res) => {
+  const { vereficationCode } = req.params;
+  const user = await User.findOne({ vereficationCode });
+  if (!user) {
+    throw HttpError(404);
+  }
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    vereficationCode: "",
+  });
+
+  res.json({ message: "Verify success" });
 };
 
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
-  if (!user) {
+  if (!user || !user.verify) {
     throw HttpError(401, "Email or password invalid");
   }
 
@@ -90,6 +115,7 @@ const updateSubscription = async (req, res) => {
 
 module.exports = {
   register: ctrlWrapper(register),
+  verify: ctrlWrapper(verify),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
